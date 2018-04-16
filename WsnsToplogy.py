@@ -19,7 +19,7 @@ class WsnsToplogy():
 		:param init_engy: 初始化能量
 		"""
 		# 设置随机种子可以保持运行结果的一致
-		np.random.seed(4)
+		np.random.seed(30)
 		# 设置坐标轴字体
 		mpl.rcParams['xtick.labelsize'] = 16
 		mpl.rcParams['ytick.labelsize'] = 16
@@ -36,9 +36,8 @@ class WsnsToplogy():
 
 		self.__monit_area = monit_area
 		self.__node_num = node_num
-		self.__init_engy = [init_engy] * node_num
-		self.__node_alive = np.ones(self.__node_num)
-		print(self.__node_alive)
+		self.__alivenode_num = node_num
+		self.__res_engy = [init_engy] * node_num
 		# 随机分布节点
 		self.__node_xy = self.__dstrTop()
 
@@ -53,8 +52,12 @@ class WsnsToplogy():
 		return np.transpose(node_xy)
 
 	########################
-	def calcuAliveNodesNum(self):
-		return np.sum(self.__node_alive == 1)
+	def getAliveNodesNum(self):
+		"""
+		获取存活节点数
+		:return:
+		"""
+		return np.sum(self.__res_engy != 0)
 
 	def calcuCenter(self):
 		"""
@@ -83,16 +86,36 @@ class WsnsToplogy():
 			sum += np.sqrt(self.calcDist(C, [self.__node_xy[0][i], self.__node_xy[1][i]]))
 		return sum / self.__node_num
 
-	#  寻找实际类中心点
-	def calcuRealCenters(self, cluster_centers):
-		m, n = np.shape(cluster_centers)
+	def calcuRealCenters(self, cluster_center):
+		"""
+		寻找实际类中心点
+		:param cluster_center:
+		:return:
+		"""
+		mindst = np.Inf
+		min_index = 0
 		for i in range(self.__node_num):
-			for j in range(m):
-				pass
-
-			# TODO：寻找实际点
+			if self.__res_engy[i] != 0:
+				d = self.calcDist(self.__node_xy[i], cluster_center)
+				if d < mindst:
+					mindst = d
+					min_index = i
+		return min_index
 
 	###################
+	def drawClusterTopo(self, center_idx, cluster):
+		n = len(center_idx)
+		for cls_idx in range(n):
+			for i in range(self.__node_num):
+				if cluster[i] == cls_idx:
+					cls_xy = self.__node_xy[int(center_idx[cls_idx])]
+					# print(cls_xy)
+					plt_x = [cls_xy[0], self.__node_xy[i][0]]
+					plt_y = [cls_xy[1], self.__node_xy[i][1]]
+					# print(plt_x)
+					plt.plot(plt_x, plt_y, color = 'r')
+		plt.savefig("clustering.png")
+
 	def drawDot(self, x, y, color='r'):
 		"""
 		画点
@@ -112,7 +135,8 @@ class WsnsToplogy():
 		"""
 		画所有节点
 		"""
-		plt.scatter(self.__node_xy[0], self.__node_xy[1])
+		xy = np.transpose(self.__node_xy)
+		plt.scatter(xy[0], xy[1])
 		plt.savefig('top.png')
 
 	def show(self):
@@ -128,7 +152,7 @@ class WsnsToplogy():
 		:param index: 节点索引
 		:return: 一个节点坐标
 		"""
-		return [self.__node_xy[0][index], self.__node_xy[1][index]]
+		return self.__node_xy[index]
 
 	def getMonitArea(self):
 		"""
@@ -144,12 +168,12 @@ class WsnsToplogy():
 		"""
 		return self.__node_num
 
-	def getInitEngy(self):
+	def getResEngy(self):
 		"""
 		获取初始能量
 		:return: 初始能量
 		"""
-		return self.__init_engy
+		return self.__res_engy
 
 	def getNode_XY(self):
 		"""

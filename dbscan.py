@@ -1,35 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @File  : main.py
+# @File  : dbscan.py
 # @Software: PyCharm
 # @Author: Kenn
-# @Date  : 2018/4/3
-# @Desc  :
+# @Date  : 2018/4/16
+# @Desc  : DBSCAN 算法分簇
 from WsnsToplogy import WsnsToplogy
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 
 
 def main():
 	node_num = 50
 	monit_area = [100, 100]
 	net = WsnsToplogy(monit_area = monit_area, node_num = node_num)
-	# print(net.getNode_XY())
 	nodes_xy = net.getNode_XY()
 	cls_num = int(np.ceil(np.sqrt(node_num / 2)))  # 上取整
 	print("cluster number: " + str(cls_num))
-	clusterer = KMeans(n_clusters = cls_num, max_iter = 1000, random_state = 32)
-	kmeans = clusterer.fit(nodes_xy)
-	center_xy = kmeans.cluster_centers_
-	cluster = kmeans.labels_
-	print("cluster centers:")
-	print(center_xy)
+	dbscan = DBSCAN(eps = 15, min_samples = 2).fit(nodes_xy)
+	cluster = dbscan.labels_
+	center_xy = dbscan.core_sample_indices_
 	print(cluster)
-	net.calcuRealCenters(center_xy)
-
-
-# for i in range(node_num):
-# 	for c_i in range(cls_num):
+	print(center_xy)
 
 
 if __name__ == '__main__':
